@@ -1,5 +1,5 @@
 namespace L {
-    export interface Map extends Evented {
+    export interface Map extends L.Evented {
         navigate: L.Control.NavigateTo
     }
     export interface MapOptions {
@@ -17,7 +17,7 @@ namespace L {
             radius: number = 9
             contextmenu: boolean = true
             contextmenuInheritItems: boolean = false
-            contextmenuItems: Array<L.IContextmenuItem> = [
+            contextmenuItems: Array<L.ContextmenuItemOptions> = [
                 {
                     disabled: false,
                     text: "Остановить навигацию",
@@ -49,7 +49,7 @@ namespace L {
         }
 
         export class NavigateTo extends L.Control {
-            options: NavigateToOptions
+            override options: NavigateToOptions
             navigating: boolean = false
             _container: HTMLDivElement = null
             _innerContainer: HTMLDivElement = null
@@ -134,13 +134,13 @@ namespace L {
                 map.off('navigate:start', this._onNavigateStart, this);
                 map.off('navigate:stop', this._onNavigateStop, this);
             }
-            _onLocationUpdate(e) {
+            _onLocationUpdate(e: GeolocationCoordinates) {
                 this._location = L.latLng(e.latitude, e.longitude, e.altitude);
                 if (!this.navigating) return;
 
                 this._updateControl();
             }
-            _onNavigateStart(latlng) {
+            _onNavigateStart(latlng: L.LatLng) {
                 if (!this._map.locateEx) throw new Error('leaflet.navigate requires LocateEx control');
                 if (this.navigating) this._onNavigateStop();
 
@@ -174,7 +174,7 @@ namespace L {
                 //}, 200);
                 this._container.style.display = 'block';
             }
-            bearing(latlng1, latlng2) {
+            bearing(latlng1: L.LatLng, latlng2: L.LatLng): number {
                 var rad = Math.PI / 180,
                     lat1 = latlng1.lat * rad,
                     lat2 = latlng2.lat * rad,
@@ -202,7 +202,7 @@ namespace L {
                 this._container.style.display = 'none';
             }
 
-            _getIconSVG(heading, compassHeading) {
+            _getIconSVG(heading: number, compassHeading: number) {
                 const headingRotate = `translate(0,0) rotate(${heading} 24 24)`;
                 const compassHeadingRotate = `rotate(${(360 - compassHeading) % 360} 24 24)`;
                 const code = `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 48 48" overflow="visible">` +
@@ -230,11 +230,11 @@ namespace L {
                 const trueBearing = (360 + this.bearing(this._location, this._destination)) % 360;
                 let heading = ((trueBearing - compassHeading) + 360) % 360;
 
-                const arrowContainer = this._container.querySelector("#headingArrow")
+                const arrowContainer = this._container.querySelector("#headingArrow") as HTMLSpanElement
                 const headingArrowSvg = this._getIconSVG(heading, compassHeading);
                 arrowContainer.innerHTML = headingArrowSvg.code;
-                arrowContainer.style.width = 48;
-                arrowContainer.style.height = 48;
+                arrowContainer.style.width = "48";
+                arrowContainer.style.height = "48";
 
                 const courseValue = this._container.querySelector("#courseValue");
                 courseValue.innerHTML = `курс ${Math.round(trueBearing)}°`;
@@ -274,13 +274,13 @@ namespace L {
                     value = Math.round(distance / 1000);
                     units = `км`;
                 }
-                this._container.querySelector("#distanceValue").innerHTML = value;
+                this._container.querySelector("#distanceValue").innerHTML = value.toString();
                 this._container.querySelector("#distanceUnits").innerHTML = units;
             }
         }
     }
 
-    export function navigate (options?) {
+    export function navigate(options?: L.Control.NavigateToOptions) {
         return new L.Control.NavigateTo(options);
     }
 }
