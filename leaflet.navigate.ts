@@ -46,6 +46,7 @@ namespace L {
             destinationMarkerOptions: L.Control.DestinationMarkerOptions = new L.Control.DestinationMarkerOptions();
             _destinationHeadingStyle: L.Control.DestinationHeadingStyleOptions = new L.Control.DestinationHeadingStyleOptions();
             destinationLineOptions: L.Control.DestinationLineOptions = new L.Control.DestinationLineOptions();
+            simulateCompass: boolean = false;
         }
 
         export class NavigateTo extends L.Control {
@@ -70,23 +71,22 @@ namespace L {
                 this._map = map;
                 const container = this._container = document.createElement('div');
                 container.style.display = 'none';
+                container.style.pointerEvents = 'none';
                 const innerContainer = this._innerContainer = document.createElement('div');
-                innerContainer.style.display = 'flex';
-                innerContainer.style.justifyContent = 'center';
                 L.DomUtil.addClass(innerContainer, 'leaflet-navigate-container');
                 container.appendChild(innerContainer);
 
                 {
-                    const arrowSpan = document.createElement('span');
-                    arrowSpan.id = 'headingArrow';
-                    arrowSpan.style.width = this.options._destinationHeadingStyle.depth;
-                    arrowSpan.style.height = this.options._destinationHeadingStyle.depth;
-                    L.DomUtil.addClass(arrowSpan, 'leaflet-navigate-arrow');
+                    const arrowDiv = document.createElement('div');
+                    arrowDiv.id = 'headingArrow';
+                    arrowDiv.style.width = this.options._destinationHeadingStyle.depth;
+                    arrowDiv.style.height = this.options._destinationHeadingStyle.depth;
+                    L.DomUtil.addClass(arrowDiv, 'leaflet-navigate-arrow');
 
-                    innerContainer.appendChild(arrowSpan);
+                    innerContainer.appendChild(arrowDiv);
                 }
 
-                const valuesContainer = document.createElement('div');
+                const valuesContainer = L.DomUtil.create('div', 'leaflet-navigate-values', innerContainer);
                 valuesContainer.style.display = 'flex';
                 valuesContainer.style.flexDirection = 'column';
 
@@ -111,12 +111,12 @@ namespace L {
                     courseContainer.style.display = 'flex';
                     courseContainer.style.flexDirection = 'row';
 
-                    const courseValue = document.createElement('span');
+                    const courseValue = document.createElement('div');
                     courseValue.id = 'courseValue';
                     L.DomUtil.addClass(courseValue, "leaflet-navigate-units gis-themeaware");
                     courseContainer.appendChild(courseValue);
 
-                    const courseDiff = document.createElement('span');
+                    const courseDiff = document.createElement('div');
                     courseDiff.id = 'courseDiff';
                     L.DomUtil.addClass(courseDiff, "leaflet-navigate-units gis-themeaware");
                     courseContainer.appendChild(courseDiff);
@@ -167,11 +167,14 @@ namespace L {
 
                 this._updateControl();
                 this._headingUpdateIntervalId = setInterval(() => this._updateCompass(), 200);
-                //// uncomment for debugging on desktop
-                //this._headingUpdateIntervalId = setInterval(() => {
-                //    this._map.locateEx._compassHeading = this._map.locateEx._compassHeading > 360 ? 0 : this._map.locateEx._compassHeading + 3;
-                //    this._updateCompass();
-                //}, 200);
+                
+                if (this.options.simulateCompass) {
+                    //for compass debug on unsupported hardware
+                    this._headingUpdateIntervalId = setInterval(() => {
+                        this._map.locateEx._compassHeading = this._map.locateEx._compassHeading > 360 ? 0 : this._map.locateEx._compassHeading + 3;
+                        this._updateCompass();
+                    }, 200);
+                }
                 this._container.style.display = 'block';
             }
             bearing(latlng1: L.LatLng, latlng2: L.LatLng): number {
@@ -205,7 +208,7 @@ namespace L {
             _getIconSVG(heading: number, compassHeading: number) {
                 const headingRotate = `translate(0,0) rotate(${heading} 24 24)`;
                 const compassHeadingRotate = `rotate(${(360 - compassHeading) % 360} 24 24)`;
-                const code = `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 48 48" overflow="visible">` +
+                const code = `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 48 48" width="48" height="48" overflow="visible">` +
                     `<g transform="${compassHeadingRotate}">` +
                     `<path fill-rule="evenodd" clip-rule="evenodd" d="M42.59 5.83a26.68 26.68 0 0 0-.88-.88l-5.52 5.79a19.17 19.17 0 0 1 .61.61l5.79-5.52Zm0 35.88-5.79-5.52a19.17 19.17 0 0 1-.61.61l5.52 5.79a26.64 26.64 0 0 0 .88-.88Zm-36.76.88 5.52-5.79a18.77 18.77 0 0 1-.61-.61L4.95 41.7a26.48 26.48 0 0 0 .88.88Zm0-37.64 5.52 5.79a18.77 18.77 0 0 0-.61.61L4.95 5.83a26.52 26.52 0 0 1 .88-.88Z" fill="#fff"/>` +
                     `<path d="m25.37 6.84 1.68.54a3.78 3.78 0 0 1-1.29 2.09 3.7 3.7 0 0 1-2.28.68 3.7 3.7 0 0 1-2.81-1.17 4.48 4.48 0 0 1-1.1-3.2c0-1.43.37-2.54 1.1-3.33a3.8 3.8 0 0 1 2.92-1.19c1.05 0 1.9.31 2.56.94.39.36.68.89.88 1.58l-1.72.4a1.8 1.8 0 0 0-.64-1.05 1.81 1.81 0 0 0-1.17-.38c-.64 0-1.15.22-1.55.68-.4.46-.6 1.2-.6 2.22 0 1.09.2 1.86.6 2.32.38.46.89.7 1.51.7.47 0 .86-.15 1.2-.45.33-.29.56-.75.7-1.38Zm3.75 39.75H27.4V43H26a4.5 4.5 0 0 1-1.12 2.66c-.64.72-1.58 1.08-2.81 1.08a3.64 3.64 0 0 1-2.82-1.15 4.7 4.7 0 0 1-1.05-3.28c0-.93.15-1.73.45-2.39.3-.65.74-1.16 1.3-1.53a3.74 3.74 0 0 1 2.07-.54c.85 0 1.52.14 2.02.4.5.27.93.7 1.3 1.3.38.58.6 1.26.66 2.01h1.4V38h1.73v8.59Zm-4.86-4.3a3.7 3.7 0 0 0-.57-2.22 1.87 1.87 0 0 0-1.6-.77c-.7 0-1.24.26-1.59.77a4.1 4.1 0 0 0-.53 2.31c0 .99.2 1.7.61 2.16a2 2 0 0 0 1.57.7 1.9 1.9 0 0 0 1.52-.7c.4-.47.59-1.22.59-2.26ZM3.75 25.9l-.39 1.69c-1.4-.36-2.1-1.4-2.1-3.1 0-1 .23-1.77.67-2.28a2 2 0 0 1 1.56-.77c.41 0 .78.11 1.11.35a3 3 0 0 1 .87 1.05c.2-.57.47-1 .83-1.28s.8-.43 1.32-.43c.75 0 1.36.28 1.83.83.46.56.7 1.38.7 2.48 0 .9-.15 1.61-.45 2.13-.3.52-.86.91-1.68 1.17l-.52-1.59c.51-.16.85-.38 1-.65.15-.27.23-.6.23-1 0-.55-.12-.95-.35-1.2a1.1 1.1 0 0 0-.82-.37c-.35 0-.63.14-.85.42-.21.28-.32.71-.32 1.28v.4H5.1v-.2c0-.54-.11-.94-.35-1.22a1.18 1.18 0 0 0-.95-.43c-.31 0-.58.12-.8.35-.2.23-.31.55-.31.98 0 .72.36 1.19 1.07 1.4Zm42.84-5.02v3.43c0 .68-.03 1.19-.09 1.52a2.18 2.18 0 0 1-1.07 1.56c-.3.17-.63.26-1 .26-.4 0-.77-.1-1.11-.33a2 2 0 0 1-.76-.87 2.07 2.07 0 0 1-2.07 1.63 2.55 2.55 0 0 1-2.03-1.03c-.22-.3-.35-.7-.4-1.16A28.8 28.8 0 0 1 38 23.8v-2.92h8.59Zm-1.43 1.73h-1.99v1.14c0 .68.01 1.1.03 1.26.04.3.14.53.3.7.18.17.4.25.68.25.27 0 .48-.07.65-.22a.98.98 0 0 0 .3-.65c.02-.17.03-.66.03-1.48v-1Zm-3.42 0h-2.3v1.6c0 .63.02 1.03.06 1.2.05.26.16.46.34.63.18.16.43.24.73.24.26 0 .48-.06.66-.19.18-.12.3-.3.4-.54.07-.24.11-.75.11-1.54v-1.4Z" fill="#fff"/>` +

@@ -1,0 +1,53 @@
+
+.leaflet-navigate-container {
+    display: grid;
+    padding: 0 4px 0 4px;
+    height: 56px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 6px;
+    pointer-events: none;
+    justify-items: center;
+}
+.leaflet-navigate-values {
+    grid-row: 1;
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+}
+.leaflet-navigate-value {
+    font-size: 32px;
+    line-height: 32px;
+    font-weight: 500;
+    padding: 2px 2px 0px 2px;
+    font-family: Consolas, Monaco,'Lucida Console', monospace;
+    color: black;
+    -webkit-filter: drop-shadow(0 0 6px white);
+    filter: drop-shadow(0 0 6px white);
+    text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.leaflet-navigate-units {
+    vertical-align: top;
+    /* font-size: 12pt; */
+    line-height: 16px;
+    font-weight: 500;
+    justify-content: right;
+    text-align: right;
+    padding: 2px 2px 2px 2px;
+    font-family: Consolas, Monaco,'Lucida Console', monospace;
+    color: black;
+    -webkit-filter: drop-shadow(0 0 6px white);
+    filter: drop-shadow(0 0 6px white);
+    text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.leaflet-navigate-arrow {
+    margin: 4px;
+    color: red;
+    font-weight: bolder;
+    font-size: 48px;
+    line-height: 48px;
+    transform-origin: 0px 0px;
+    grid-column: 1;
+    grid-row: 1;
+}
