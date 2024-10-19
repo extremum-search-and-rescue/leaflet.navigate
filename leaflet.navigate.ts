@@ -19,6 +19,7 @@ namespace L {
             contextmenuInheritItems: boolean = false
             contextmenuItems: Array<L.ContextmenuItemOptions> = [
                 {
+                    rum: "context-stop-navigate",
                     disabled: false,
                     text: "Остановить навигацию",
                     callback: (e) => {
